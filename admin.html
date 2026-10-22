@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Reservas · Administración</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef2f2; --surface:#ffffff; --ink:#12232b; --muted:#5d727b; --line:#d6e0e2;
+  --accent:#0a6a7d; --accent-ink:#ffffff; --accent-soft:#d9eef2;
+  --ok:#1c7a4a; --warn:#9a6200; --warn-soft:#fbecc9; --bad:#b3261e;
+  --head:#e3ebec;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1b20; --surface:#17262d; --ink:#e6eff1; --muted:#93a9b1; --line:#2a3f48;
+  --accent:#4fc0d4; --accent-ink:#06222a; --accent-soft:#17414b;
+  --ok:#5fcf93; --warn:#f0bf5a; --warn-soft:#46350f; --bad:#ff8a80;
+  --head:#1d3039; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1.1;margin:0}
+h2{font-family:var(--f-display);font-size:18px;margin:0}
+.sub{color:var(--muted);margin-top:4px}
+.btn{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:7px 12px;cursor:pointer;min-height:36px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)}
+.btn.small{padding:3px 8px;min-height:28px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:36px;min-width:0}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+nav button{font:inherit;font-weight:500;background:none;border:0;border-bottom:3px solid transparent;padding:9px 14px;color:var(--muted);cursor:pointer}
+nav button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.panel{padding:16px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld label{font-size:12px;color:var(--muted)}
+.note{color:var(--muted);font-size:13px;max-width:70ch;margin:0}
+.nav-day{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nav-day input{font-family:var(--f-num)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:12px;font-family:var(--f-num);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:3px 10px;cursor:pointer}
+.chip.sel{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.today{border-color:var(--warn)}
+.item{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .t{font-family:var(--f-num);font-weight:600;font-size:18px;min-width:56px;color:var(--accent)}
+.item .i{flex:1 1 200px;min-width:0}
+.item .i b{font-family:var(--f-display);font-size:16px}
+.item .i span{color:var(--muted)}
+.item .a{display:flex;gap:6px}
+.item.editing{background:var(--accent-soft)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:6px;z-index:20;max-width:90vw}
+.banner{padding:10px 14px;border-radius:8px;background:var(--warn-soft);color:var(--warn)}
+@media (max-width:560px){h1{font-size:22px}}
+</style></head><body>
+<div class="wrap">
+  <header>
+    <div><h1>Reservas · Administración</h1><div class="sub" id="sub">Solo tú ves esta página</div></div>
+    <div class="row"><button class="btn primary" id="btnPub">Publicar cambios</button></div>
+  </header>
+  <div id="banner"></div>
+  <nav role="tablist" id="tabs">
+    <button role="tab" data-tab="reservas" aria-selected="true">Reservas</button>
+    <button role="tab" data-tab="publicar" aria-selected="false">Publicación</button>
+  </nav>
+  <main id="view"></main>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const MESL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const todayISO=isoOf(new Date());
+const parse=iso=>{const [y,m,d]=iso.split('-').map(Number);return new Date(y,m-1,d)};
+const shift=(iso,n)=>{const d=parse(iso);d.setDate(d.getDate()+n);return isoOf(d)};
+const fdate=iso=>{const d=parse(iso);return DIAS[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()]};
+const toMin=t=>{const p=String(t||'').split(':');return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0)};
+const byHora=(a,b)=>toMin(a.hora)-toMin(b.hora)||String(a.nombre).localeCompare(String(b.nombre));
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2600)}
+
+const KEY='reservas_v1',DK='reservas_dirty',GHK='reservas_gh';
+const S={reservas:[],cfg:{},fecha:todayISO,edit:null,tab:'reservas',confirm:null};
+
+/* ---------- almacenamiento local ---------- */
+function loadLocal(){try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&Array.isArray(r.reservas)){S.reservas=r.reservas;S.cfg=r.cfg||{}}}catch(e){}}
+function persist(dirty){try{localStorage.setItem(KEY,JSON.stringify({cfg:S.cfg,reservas:S.reservas}));if(dirty)localStorage.setItem(DK,'1');else localStorage.removeItem(DK)}catch(e){}}
+const isDirty=()=>{try{return !!localStorage.getItem(DK)}catch(e){return false}};
+function mutate(){S.cfg.actualizado=todayISO;persist(true);render()}
+
+/* ---------- vistas ---------- */
+function viewReservas(){
+  const dia=S.reservas.filter(r=>r.fecha===S.fecha).sort(byHora);
+  const tot=dia.reduce((a,r)=>a+(Number(r.personas)||0),0);
+  const e=S.edit?S.reservas.find(r=>r.id===S.edit):null;
+  const ym=S.fecha.slice(0,7);
+  const cnt={};S.reservas.forEach(r=>{if(String(r.fecha).startsWith(ym))cnt[r.fecha]=(cnt[r.fecha]||0)+1});
+  const dias=Object.keys(cnt).sort();
+  let h=`<div class="card panel"><div class="nav-day">
+    <button class="btn" data-act="prev" aria-label="Día anterior">←</button>
+    <input id="fd" type="date" value="${S.fecha}" aria-label="Fecha">
+    <button class="btn" data-act="next" aria-label="Día siguiente">→</button>
+    <button class="btn" data-act="hoy">Hoy</button></div>
+    <h2 style="text-transform:capitalize">${esc(fdate(S.fecha))}</h2>`;
+  h+=`<div class="chips" aria-label="Días con reservas este mes">`+(dias.length?dias.map(d=>`<button class="chip${d===S.fecha?' sel':''}${d===todayISO?' today':''}" data-act="goto" data-d="${d}">${Number(d.slice(8))} · ${cnt[d]}</button>`).join(''):'<span class="note">Este mes no hay reservas registradas.</span>')+`</div></div>`;
+  h+=`<div class="card panel"><h2>${e?'Editar reserva':'Agregar reserva'} · ${esc(fdate(S.fecha))}</h2>
+    <div class="row">
+      <div class="fld"><label for="rh">Hora</label><input id="rh" type="time" value="${esc(e?e.hora:'')}" style="width:130px;font-family:var(--f-num)"></div>
+      <div class="fld" style="flex:1 1 180px"><label for="rn">Nombre</label><input id="rn" type="text" value="${esc(e?e.nombre:'')}" autocomplete="off" placeholder="Solo nombre"></div>
+      <div class="fld"><label for="rp">Personas</label><input id="rp" type="number" min="1" inputmode="numeric" value="${esc(e?e.personas:'')}" style="width:90px;font-family:var(--f-num)"></div>
+      <div class="fld" style="flex:1 1 200px"><label for="rt">Nota (opcional)</label><input id="rt" type="text" value="${esc(e?e.nota:'')}" autocomplete="off" placeholder="Ej. cumpleaños, alergia, mesa 3"></div>
+    </div>
+    <div class="row"><button class="btn primary" data-act="save">${e?'Guardar cambios':'Agregar'}</button>${e?'<button class="btn" data-act="cancel">Cancelar</button>':''}</div></div>`;
+  h+=`<div class="card"><div style="padding:12px 14px;border-bottom:1px solid var(--line)"><b>${dia.length} ${dia.length===1?'reserva':'reservas'}</b> · ${tot} ${tot===1?'persona':'personas'}</div>`;
+  h+=dia.length?dia.map(r=>`<div class="item${S.edit===r.id?' editing':''}"><span class="t">${esc(r.hora)}</span><div class="i"><b>${esc(r.nombre)}</b> <span>· ${Number(r.personas)||'?'} pers.${r.nota?' · '+esc(r.nota):''}</span></div><div class="a"><button class="btn small" data-act="edit" data-id="${esc(r.id)}">Editar</button><button class="btn small danger" data-act="del" data-id="${esc(r.id)}">${S.confirm==='r:'+r.id?'¿Borrar?':'Borrar'}</button></div></div>`).join(''):'<div class="item"><span class="note">No hay reservas este día.</span></div>';
+  return h+'</div>';
+}
+
+function viewPublicar(){
+  const c=Object.assign({},guessRepo(),gh());const conn=!!c.token;
+  return `<div class="card panel"><h2>Conexión con GitHub</h2>
+  <p class="note">${conn?'Este dispositivo ya puede publicar. Estado: '+(isDirty()?'<b>hay cambios sin publicar</b>.':'todo está publicado.'):'Conecta una vez cada dispositivo (celular y computadora) para poder pulsar «Publicar cambios».'}</p>
+  <div class="row">
+    <div class="fld"><label for="gho">Usuario de GitHub</label><input id="gho" value="${esc(c.owner||'')}" autocomplete="off" style="width:190px"></div>
+    <div class="fld"><label for="ghr">Nombre del repositorio</label><input id="ghr" value="${esc(c.repo||'')}" autocomplete="off" style="width:230px"></div>
+    <div class="fld" style="flex:1 1 260px"><label for="ght">Token de acceso</label><input id="ght" type="password" value="${esc(c.token||'')}" autocomplete="off" placeholder="github_pat_…"></div>
+  </div>
+  <div class="row"><button class="btn primary" data-act="ghsave">Guardar y probar</button>${conn?'<button class="btn danger" data-act="ghoff">Desconectar este dispositivo</button>':''}</div>
+  <p class="note">El token se guarda solo en este dispositivo, nunca en la página ni en el repositorio.</p></div>
+  <div class="card panel"><h2>Cómo crear el token (una vez)</h2>
+  <ol class="note" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+   <li>Entra a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
+   <li>Ponle un nombre, por ejemplo «Reservas isla», y elige la vigencia más larga.</li>
+   <li>En <b>Repository access</b> elige <b>Only select repositories</b> y marca solo el repositorio de las reservas.</li>
+   <li>En <b>Permissions → Repository permissions</b> pon <b>Contents</b> en <b>Read and write</b>.</li>
+   <li>Pulsa <b>Generate token</b>, copia el texto que empieza con <code>github_pat_</code> y pégalo arriba.</li>
+  </ol></div>`;
+}
+
+function render(){
+  for(const b of document.querySelectorAll('#tabs button'))b.setAttribute('aria-selected',String(b.dataset.tab===S.tab));
+  $('#view').innerHTML=S.tab==='publicar'?viewPublicar():viewReservas();
+  $('#banner').innerHTML=S.tab==='reservas'?'<div class="banner">Registra las reservas y pulsa «Publicar cambios» para que quienes están en la isla las vean.</div>':'';
+  const a=S.cfg.actualizado;$('#sub').textContent='Solo tú ves esta página'+(a?' · Última edición: '+fdate(a):'');
+  refreshPub();
+}
+function refreshPub(){const b=$('#btnPub');if(!b||b.disabled)return;const d=isDirty();b.textContent=d?'Publicar cambios':'Todo publicado';b.classList.toggle('primary',d)}
+
+/* ---------- eventos ---------- */
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.tab=b.dataset.tab;S.confirm=null;render()});
+$('#view').addEventListener('change',e=>{if(e.target.id==='fd'&&e.target.value){S.fecha=e.target.value;S.edit=null;render()}});
+$('#view').addEventListener('keydown',e=>{if(e.key==='Enter'&&/^r[hnpt]$/.test(e.target.id)){e.preventDefault();saveRes()}});
+function saveRes(){
+  const hora=$('#rh').value,nombre=$('#rn').value.trim(),personas=Number($('#rp').value),nota=$('#rt').value.trim();
+  if(!hora||!nombre||!(personas>0)){toast('Escribe hora, nombre y número de personas.');return}
+  if(S.edit){const r=S.reservas.find(x=>x.id===S.edit);if(r)Object.assign(r,{fecha:S.fecha,hora,nombre,personas,nota});S.edit=null;toast('Reserva actualizada')}
+  else{S.reservas.push({id:'r'+Date.now().toString(36),fecha:S.fecha,hora,nombre,personas,nota});toast('Reserva agregada')}
+  mutate();const h=$('#rh');if(h)h.focus();
+}
+$('#view').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act;
+  if(act==='prev'){S.fecha=shift(S.fecha,-1);S.edit=null;render()}
+  else if(act==='next'){S.fecha=shift(S.fecha,1);S.edit=null;render()}
+  else if(act==='hoy'){S.fecha=todayISO;S.edit=null;render()}
+  else if(act==='goto'){S.fecha=b.dataset.d;S.edit=null;render()}
+  else if(act==='save')saveRes();
+  else if(act==='cancel'){S.edit=null;render()}
+  else if(act==='edit'){S.edit=b.dataset.id;render();const n=$('#rn');if(n)n.scrollIntoView({block:'center'})}
+  else if(act==='del'){const id=b.dataset.id,k='r:'+id;
+    if(S.confirm===k){S.confirm=null;S.reservas=S.reservas.filter(r=>r.id!==id);if(S.edit===id)S.edit=null;mutate()}
+    else{S.confirm=k;render();setTimeout(()=>{if(S.confirm===k){S.confirm=null;render()}},3000)}}
+  else if(act==='ghsave'){
+    const c={owner:$('#gho').value.trim(),repo:$('#ghr').value.trim(),token:$('#ght').value.trim()};
+    if(!c.owner||!c.repo||!c.token){toast('Completa usuario, repositorio y token.');return}
+    try{await ghSha(c);localStorage.setItem(GHK,JSON.stringify(c));toast('Conexión correcta. Ya puedes publicar.');render()}
+    catch(x){toast((x&&x.message)||'No se pudo conectar.')}
+  }
+  else if(act==='ghoff'){try{localStorage.removeItem(GHK)}catch(x){}toast('Dispositivo desconectado.');render()}
+});
+
+/* ---------- publicación en GitHub ---------- */
+const gh=()=>{try{return JSON.parse(localStorage.getItem(GHK)||'null')||{}}catch(e){return{}}};
+function guessRepo(){const h=location.hostname,p=location.pathname.split('/').filter(Boolean);if(h.endsWith('.github.io'))return{owner:h.split('.')[0],repo:(p[0]&&!p[0].includes('.'))?p[0]:h};return{}}
+const ghUrl=c=>'https://api.github.com/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+'/contents/data.json';
+const ghH=c=>({'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'});
+const b64e=s=>btoa(unescape(encodeURIComponent(s)));
+function ghErr(r){return new Error(r.status===401?'El token no es válido o venció.':r.status===403?'El token no tiene permiso de escritura en este repositorio.':r.status===404?'No encuentro data.json en ese repositorio. Revisa usuario y nombre.':'GitHub respondió con error '+r.status+'.')}
+async function ghSha(c){const r=await fetch(ghUrl(c),{headers:ghH(c),cache:'no-store'});if(!r.ok)throw ghErr(r);return (await r.json()).sha}
+async function publicar(){
+  const c=gh();
+  if(!c.token){toast('Primero conecta GitHub en la pestaña Publicación.');S.tab='publicar';render();return}
+  const b=$('#btnPub');b.disabled=true;b.textContent='Publicando…';
+  try{
+    const sha=await ghSha(c);
+    const body={cfg:S.cfg,reservas:[...S.reservas].sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora))};
+    const r=await fetch(ghUrl(c),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ghH(c)),body:JSON.stringify({message:'Actualización de reservas '+todayISO,content:b64e(JSON.stringify(body,null,1)),sha})});
+    if(!r.ok)throw ghErr(r);
+    persist(false);
+    toast('Publicado. Se verá en 1 o 2 minutos.');
+  }catch(e){toast((e&&e.message)||'No se pudo publicar. Revisa tu conexión.')}
+  b.disabled=false;refreshPub();
+}
+$('#btnPub').addEventListener('click',publicar);
+
+async function pull(){
+  if(isDirty()||!/^https?:/.test(location.protocol))return;
+  try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const j=await r.json();S.reservas=Array.isArray(j.reservas)?j.reservas:[];S.cfg=j.cfg||{};persist(false);render()}catch(e){}
+}
+
+/* ---------- arranque ---------- */
+loadLocal();render();
+pull().then(()=>{if(!gh().token&&!S.reservas.length){S.tab='publicar';render()}});
+})();
+</script>
+</body></html>
