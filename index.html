@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Reservas de hoy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef2f2; --surface:#ffffff; --ink:#12232b; --muted:#5d727b; --line:#d6e0e2;
+  --accent:#0a6a7d; --accent-ink:#ffffff; --accent-soft:#d9eef2;
+  --ok:#1c7a4a; --ok-soft:#dcf1e5; --warn:#9a6200; --warn-soft:#fbecc9; --bad:#b3261e; --bad-soft:#fadcd9;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1b20; --surface:#17262d; --ink:#e6eff1; --muted:#93a9b1; --line:#2a3f48;
+  --accent:#4fc0d4; --accent-ink:#06222a; --accent-soft:#17414b;
+  --ok:#5fcf93; --ok-soft:#173d2a; --warn:#f0bf5a; --warn-soft:#46350f; --bad:#ff8a80; --bad-soft:#4a1f1c; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--f-display);font-weight:700;font-size:28px;line-height:1.1;margin:0}
+.sub{color:var(--muted)}
+.clock{font-family:var(--f-num);font-size:28px;font-weight:500;font-variant-numeric:tabular-nums}
+.win{background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;justify-content:space-between}
+.win .l{font-size:13px;text-transform:uppercase;letter-spacing:.08em;opacity:.85}
+.win .r{font-family:var(--f-num);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums}
+.win .c{font-size:15px;opacity:.95}
+h2{font-family:var(--f-display);font-size:18px;margin:6px 0 0;display:flex;gap:8px;align-items:center}
+h2 .n{font-family:var(--f-num);font-size:14px;background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:0 9px}
+h2.late{color:var(--bad)} h2.late .n{background:var(--bad-soft);color:var(--bad)}
+.list{display:flex;flex-direction:column;gap:10px}
+.res{display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.res.late{border-left:6px solid var(--bad)}
+.res .top{display:flex;gap:16px;align-items:flex-start}
+.res .t{font-family:var(--f-num);font-size:26px;font-weight:600;min-width:74px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.res.late .t{color:var(--bad)}
+.res .i{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.res .n{font-family:var(--f-display);font-size:22px;font-weight:600;overflow-wrap:anywhere}
+.res .p{color:var(--muted)}
+.res .o{margin:4px 0 0;color:var(--ink);background:var(--warn-soft);border-radius:6px;padding:3px 8px;font-size:14px;align-self:flex-start}
+.b{align-self:flex-start;font-size:13px;font-weight:600;border-radius:99px;padding:1px 10px;background:var(--accent-soft);color:var(--accent);margin-top:2px}
+.b.late{background:var(--bad-soft);color:var(--bad)}
+.act{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:12px}
+.act .lab{font-size:13px;color:var(--muted)}
+.step{display:flex;align-items:center;gap:2px}
+.step output{font-family:var(--f-num);font-size:24px;font-weight:600;min-width:44px;text-align:center}
+.sb{font:inherit;font-size:24px;font-weight:600;width:48px;height:48px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;cursor:pointer}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;min-height:48px}
+.btn:hover{border-color:var(--accent)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff;flex:1 1 140px;font-size:18px}
+.btn.small{min-height:36px;padding:3px 10px;font-size:13px;font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.warnb{color:var(--bad)}
+.btn:disabled{opacity:.5}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:30px 16px;text-align:center;color:var(--muted);font-size:18px}
+.done{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.done .t{font-family:var(--f-num);font-weight:600;color:var(--muted);min-width:56px}
+.done .i{flex:1 1 180px;min-width:0}
+.done .ok{color:var(--ok);font-weight:600}.done .no{color:var(--bad);font-weight:600}
+.done small{color:var(--muted);display:block}
+.foot{color:var(--muted);font-size:13px;text-align:center;display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;align-items:center}
+.banner{padding:10px 14px;border-radius:8px;background:var(--warn-soft);color:var(--warn)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.fld{display:flex;flex-direction:column;gap:4px}.fld label{font-size:12px;color:var(--muted)}
+input[type=text],input[type=password]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:48px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:20;max-width:90vw}
+.link{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;padding:4px}
+@media (max-width:480px){h1{font-size:24px}.clock{font-size:24px}.win .r{font-size:28px}.res .t{font-size:22px;min-width:62px}}
+</style></head><body>
+<div class="wrap">
+  <header>
+    <div><h1>Reservas de hoy</h1><div class="sub" id="fecha"></div></div>
+    <div class="clock" id="reloj" aria-label="Hora actual"></div>
+  </header>
+  <div id="app"></div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const MESL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
+const toMin=t=>{const p=String(t||'').split(':');return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0)};
+const fmt=x=>{x=((x%1440)+1440)%1440;return pad(Math.floor(x/60))+':'+pad(x%60)};
+const dur=m=>m<60?m+' min':Math.floor(m/60)+' h'+(m%60?' '+m%60+' min':'');
+const plural=(n,s,p)=>n+' '+(n===1?s:p);
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,3500)}
+
+const TK='agenda_tok',UK='agenda_user';
+const S={acc:null,tok:'',user:'',reservas:[],loaded:false,last:0,tried:0,err:'',pending:0,cnt:{},confirm:null,showDone:false,showLogin:false,lg:{busy:false,err:''},html:''};
+let chain=Promise.resolve();
+
+/* Ventana de 2 horas que cambia al minuto :01.  10:01 -> 10:01 a 12:00.  11:01 -> 11:01 a 13:00. */
+function windowOf(now){const h=now.getHours(),m=now.getMinutes(),H=m>=1?h:h-1;return{s:H*60+1,e:(H+2)*60}}
+const isDone=r=>!!(r.llegada||r.noLlego);
+const cnt=r=>S.cnt[r.id]!=null?S.cnt[r.id]:(Number(r.personas)||1);
+
+/* ---------- cifrado: el token solo se abre con la contraseña ---------- */
+const fromB64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function unlock(pw,acc){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:fromB64(acc.salt),iterations:acc.iter,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(acc.iv)},key,fromB64(acc.ct));
+  return JSON.parse(new TextDecoder().decode(pt)).t;
+}
+
+/* ---------- GitHub ---------- */
+const cfg=()=>({owner:S.acc.owner,repo:S.acc.repo,token:S.tok});
+const ghUrl=(c,f)=>'https://api.github.com/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+'/contents/'+(f||'data.json');
+const ghH=c=>({'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'});
+const b64e=s=>btoa(unescape(encodeURIComponent(s)));
+const b64d=s=>decodeURIComponent(escape(atob(String(s).replace(/\s/g,''))));
+function ghErr(r){const e=new Error(r.status===401?'El acceso venció. Entra de nuevo.':r.status===403?'No hay permiso para guardar. Avisa al administrador.':r.status===404?'No encuentro los datos. Avisa al administrador.':'GitHub respondió con error '+r.status+'.');e.status=r.status;return e}
+async function ghRead(){
+  const c=cfg(),r=await fetch(ghUrl(c),{headers:ghH(c),cache:'no-store'});if(!r.ok)throw ghErr(r);
+  const o=await r.json();let d={};try{d=JSON.parse(b64d(o.content))}catch(e){}
+  if(!Array.isArray(d.reservas))d.reservas=[];
+  return{sha:o.sha,data:d};
+}
+/* Lee lo más reciente, aplica SOLO este cambio y guarda; si alguien guardó a la vez, reintenta.
+   Si fn devuelve null no hay nada que guardar. */
+async function ghUpdate(msg,fn){
+  const c=cfg();
+  for(let i=0;i<5;i++){
+    const {sha,data}=await ghRead();
+    const next=fn(data);if(next==null)return data;
+    const p=await fetch(ghUrl(c),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ghH(c)),body:JSON.stringify({message:msg,content:b64e(JSON.stringify(next,null,1)),sha})});
+    if(p.ok)return next;
+    if(p.status!==409&&p.status!==422)throw ghErr(p);
+  }
+  throw new Error('Otra persona guardó al mismo tiempo. Intenta otra vez.');
+}
+
+/* ---------- vista ---------- */
+function card(r,now,live){
+  const diff=now.getHours()*60+now.getMinutes()-toMin(r.hora),n=cnt(r),late=diff>0;
+  const badge=late?`<span class="b late">Retraso ${dur(diff)}</span>`:diff===0?'<span class="b">Ahora</span>':`<span class="b">En ${dur(-diff)}</span>`;
+  const nr=Number(r.personas)||0;
+  return `<article class="res${late?' late':''}"><div class="top"><div class="t">${esc(r.hora)}</div><div class="i"><span class="n">${esc(r.nombre)}</span>`+
+    `<span class="p">${nr||'?'} ${nr===1?'persona':'personas'}</span>`+(r.nota?`<span class="o">${esc(r.nota)}</span>`:'')+badge+`</div></div>`+
+    (live?`<div class="act"><span class="lab">Llegaron</span><div class="step"><button class="sb" data-act="minus" data-id="${esc(r.id)}" aria-label="Una persona menos">−</button><output aria-live="polite">${n}</output><button class="sb" data-act="plus" data-id="${esc(r.id)}" aria-label="Una persona más">+</button></div>`+
+    `<button class="btn ok" data-act="arrive" data-id="${esc(r.id)}">✓ Ya llegó</button>`+
+    `<button class="btn small warnb" data-act="noshow" data-id="${esc(r.id)}">${S.confirm===r.id?'¿Seguro?':'No llegó'}</button></div>`:'')+`</article>`;
+}
+function build(now){
+  const live=!!(S.tok&&S.acc),w=windowOf(now),hoy=iso(now),nowMin=now.getHours()*60+now.getMinutes();
+  const today=S.reservas.filter(r=>r.fecha===hoy).sort((a,b)=>toMin(a.hora)-toMin(b.hora)||String(a.nombre).localeCompare(String(b.nombre)));
+  const pend=today.filter(r=>!isDone(r)&&toMin(r.hora)<=w.e);
+  const late=pend.filter(r=>toMin(r.hora)<nowMin),soon=pend.filter(r=>toMin(r.hora)>=nowMin);
+  const expected=pend.reduce((a,r)=>a+(Number(r.personas)||0),0);
+  const doneL=today.filter(isDone);
+  let h='';
+  if(S.err)h+=`<div class="banner">${esc(S.err)}</div>`;
+  else if(!S.loaded)h+='<div class="banner">Cargando reservas…</div>';
+  h+=`<section class="win" aria-live="polite"><span class="l">Próximas 2 horas</span><span class="r">${fmt(w.s)} – ${fmt(w.e)}</span><span class="c">${pend.length?plural(pend.length,'reserva por llegar','reservas por llegar')+' · '+plural(expected,'persona esperada','personas esperadas'):''}</span></section>`;
+  if(!live&&S.acc){
+    h+=S.showLogin?loginHtml():`<div class="banner" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between">Solo lectura. Para marcar quién llegó, entra una vez en este dispositivo. <button class="btn small primary" data-act="showlogin">Entrar</button></div>`;
+  }
+  h+='<main class="list">';
+  if(late.length)h+=`<h2 class="late">Ya debieron llegar <span class="n">${late.length}</span></h2>`+late.map(r=>card(r,now,live)).join('');
+  if(soon.length)h+=`<h2>Por llegar <span class="n">${soon.length}</span></h2>`+soon.map(r=>card(r,now,live)).join('');
+  if(!pend.length)h+='<div class="empty">No hay reservas pendientes en este horario</div>';
+  h+='</main>';
+  if(doneL.length){
+    h+=`<button class="btn small" data-act="toggledone" style="align-self:center">${S.showDone?'Ocultar':'Ver'} atendidas hoy (${doneL.length})</button>`;
+    if(S.showDone)h+='<div class="list">'+doneL.map(r=>{
+      const nr=Number(r.personas)||0;
+      return `<div class="done"><span class="t">${esc(r.hora)}</span><div class="i"><b>${esc(r.nombre)}</b>`+
+        (r.llegada?`<small><span class="ok">✓ Llegaron ${Number(r.llegada.personas)||0} de ${nr}</span> · ${esc(r.llegada.hora||'')}${r.llegada.por?' · '+esc(r.llegada.por):''}</small>`:`<small><span class="no">✗ No llegó</span> · ${esc((r.noLlego&&r.noLlego.hora)||'')}${r.noLlego&&r.noLlego.por?' · '+esc(r.noLlego.por):''}</small>`)+`</div>`+
+        (live?`<button class="btn small" data-act="undo" data-id="${esc(r.id)}">Deshacer</button>`:'')+`</div>`}).join('')+'</div>';
+  }
+  const f=[];
+  if(live){f.push(S.pending?'Guardando…':'En vivo · actualizado '+(S.last?hm(new Date(S.last)):'—'));f.push('Sesión de '+esc(S.user)+' <button class="link" data-act="logout">Salir</button>')}
+  else f.push(S.last?'Se actualiza sola · datos de las '+hm(new Date(S.last)):'');
+  h+=`<div class="foot">${f.join(' · ')}</div>`;
+  return h;
+}
+function loginHtml(){
+  return `<div class="card" id="login"><b>Entrar para marcar llegadas</b>
+   <div class="fld"><label for="lu">Tu nombre</label><input id="lu" type="text" autocomplete="username" value="${esc(S.user)}" placeholder="Ej. Beto"></div>
+   <div class="fld"><label for="lp">Contraseña</label><input id="lp" type="password" autocomplete="current-password"></div>
+   ${S.lg.err?`<div class="banner">${esc(S.lg.err)}</div>`:''}
+   <div style="display:flex;gap:8px"><button class="btn primary" data-act="login"${S.lg.busy?' disabled':''}>${S.lg.busy?'Entrando…':'Entrar'}</button><button class="btn" data-act="hidelogin">Cancelar</button></div>
+   <span class="sub" style="font-size:13px">Solo hace falta la primera vez en cada dispositivo.</span></div>`;
+}
+function render(){
+  const now=new Date();
+  $('#reloj').textContent=hm(now);
+  $('#fecha').textContent=DIAS[now.getDay()]+' '+now.getDate()+' de '+MESL[now.getMonth()];
+  const a=document.activeElement;if(a&&(a.id==='lu'||a.id==='lp'))return;   // no borrar lo que están escribiendo
+  const h=build(now);if(h===S.html)return;S.html=h;$('#app').innerHTML=h;
+}
+
+/* ---------- datos ---------- */
+async function refresh(){
+  if(S.pending>0)return;
+  S.tried=Date.now();
+  try{
+    let list;
+    if(S.tok&&S.acc){list=(await ghRead()).data.reservas}
+    else{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();list=Array.isArray(j.reservas)?j.reservas:[]}
+    if(S.pending>0)return;                // el usuario tocó algo mientras cargaba: no pisarlo
+    S.reservas=list;S.loaded=true;S.last=Date.now();S.err='';
+  }catch(e){
+    if(e&&e.status===401){logout();toast(e.message);return}
+    S.err=S.loaded?'Sin conexión. Mostrando los últimos datos'+(S.last?' ('+hm(new Date(S.last))+')':'')+'.':'No se pudieron cargar las reservas.';
+  }
+  render();
+}
+
+/* Marcar llegada: se ve al instante y se guarda en cola; si falla, se vuelve a leer lo real. */
+function mark(id,kind){
+  const r0=S.reservas.find(x=>x.id===id);if(!r0)return;
+  const n=cnt(r0),hhmm=hm(new Date()),by=S.user,nom=r0.nombre;
+  const apply=r=>{
+    if(kind==='llego'){r.llegada={personas:n,hora:hhmm,por:by};delete r.noLlego}
+    else if(kind==='no'){r.noLlego={hora:hhmm,por:by};delete r.llegada}
+    else{delete r.llegada;delete r.noLlego}
+  };
+  apply(r0);delete S.cnt[id];S.confirm=null;S.pending++;render();
+  let conflict='';
+  chain=chain.then(async()=>{
+    try{
+      const next=await ghUpdate((kind==='undo'?'Deshace · ':kind==='llego'?'Llegó · ':'No llegó · ')+nom+' · '+by,d=>{
+        const r=d.reservas.find(x=>x.id===id);if(!r)return null;
+        if(kind!=='undo'&&isDone(r)){const o=r.llegada||r.noLlego;conflict=(r.llegada?'Ya estaba marcada como llegada':'Ya estaba marcada como «No llegó»')+(o&&o.por?' por '+o.por:'')+'.';return null}
+        apply(r);d.cfg=Object.assign(d.cfg||{},{actualizado:iso(new Date())});return d});
+      if(S.pending===1)S.reservas=next.reservas;
+      if(conflict)toast(conflict);
+    }catch(e){if(e&&e.status===401){S.pending--;logout();toast(e.message);return}toast((e&&e.message)||'No se pudo guardar. Revisa tu conexión.')}
+    S.pending--;S.last=Date.now();
+    if(S.pending===0)await refresh();else render();
+  });
+}
+
+/* ---------- sesión ---------- */
+function logout(){S.tok='';try{localStorage.removeItem(TK)}catch(e){}S.html='';render();refresh()}
+async function login(){
+  const user=$('#lu').value.trim(),pw=$('#lp').value;
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  if(!user||!pw){S.lg.err='Escribe tu nombre y la contraseña.';S.html='';render();return}
+  S.user=user;S.lg={busy:true,err:''};S.html='';render();
+  let tok;
+  try{tok=await unlock(pw,S.acc)}catch(e){S.lg={busy:false,err:'Contraseña incorrecta.'};S.html='';render();return}
+  S.tok=tok;
+  try{
+    S.reservas=(await ghRead()).data.reservas;S.loaded=true;S.last=Date.now();S.err='';
+    try{localStorage.setItem(TK,tok);localStorage.setItem(UK,user)}catch(e){}
+    S.showLogin=false;S.lg={busy:false,err:''};
+  }catch(e){S.tok='';S.lg={busy:false,err:e.message||'No se pudo entrar.'}}
+  S.html='';render();
+}
+
+/* ---------- eventos ---------- */
+$('#app').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,id=b.dataset.id;
+  const r=id&&S.reservas.find(x=>x.id===id);
+  if(act==='plus'&&r){S.cnt[id]=Math.min(99,cnt(r)+1);render()}
+  else if(act==='minus'&&r){S.cnt[id]=Math.max(1,cnt(r)-1);render()}
+  else if(act==='arrive')mark(id,'llego');
+  else if(act==='noshow'){if(S.confirm===id)mark(id,'no');else{S.confirm=id;render();setTimeout(()=>{if(S.confirm===id){S.confirm=null;render()}},3000)}}
+  else if(act==='undo')mark(id,'undo');
+  else if(act==='toggledone'){S.showDone=!S.showDone;render()}
+  else if(act==='showlogin'){S.showLogin=true;S.html='';render();const u=$('#lu');if(u)u.focus()}
+  else if(act==='hidelogin'){S.showLogin=false;S.lg.err='';S.html='';render()}
+  else if(act==='login')login();
+  else if(act==='logout')logout();
+});
+$('#app').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='lu'||e.target.id==='lp')){e.preventDefault();login()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();refresh()}});
+setInterval(render,15000);
+setInterval(()=>{if(document.hidden||S.pending)return;if(Date.now()-S.tried>=(S.tok?20000:60000))refresh()},4000);
+
+/* ---------- arranque ---------- */
+(async function(){
+  try{S.tok=localStorage.getItem(TK)||'';S.user=localStorage.getItem(UK)||''}catch(e){}
+  try{const r=await fetch('acceso.json?t='+Date.now(),{cache:'no-store'});if(r.ok){const a=await r.json();if(a&&a.ct)S.acc=a}}catch(e){}
+  if(!S.acc)S.tok='';
+  render();await refresh();
+})();
+})();
+</script>
+</body></html>
