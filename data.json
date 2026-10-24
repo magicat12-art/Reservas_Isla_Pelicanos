@@ -57,7 +57,12 @@
    "hora": "12:05",
    "nombre": "prueba sabado",
    "personas": 7,
-   "nota": "sabado"
+   "nota": "sabado",
+   "llegada": {
+    "personas": 7,
+    "hora": "12:32",
+    "por": "Paola"
+   }
   },
   {
    "id": "rmvmq29pcn6p",
